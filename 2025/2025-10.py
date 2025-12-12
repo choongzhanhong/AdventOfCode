@@ -57,29 +57,11 @@ def button_result(button, length):
         temp[i] += 1
     
     return temp
-### Should be a coin combination problem
-memo = {}
 
-def min_button_press(array, available_buttons):
+import numpy as np
+from scipy.optimize import milp, Bounds, LinearConstraint
 
-    # success base case
-    if is_all_zero(array):
-        return 0
-    
-    # failure case
-    if less_than_zero(array):
-        return float('inf')
-
-    min_count = float('inf')
-
-    for button in available_buttons:
-        result = min_button_press(subtract_arrays(array, button_result(button, len(array))), available_buttons)
-        if result != float('inf'):
-            min_count = min(min_count, result + 1)
-    
-    return min_count
-
-with open("2025-10-test.txt", 'r') as f:
+with open("2025-10-input.txt", 'r') as f:
     machines = []
     buttons = []
     ### part 2
@@ -122,17 +104,24 @@ with open("2025-10-test.txt", 'r') as f:
     total_pt2 = 0
    
     ### part 2
-    for i in range(len(joltages)):
-        print(f"Checking {joltages[i]}: {buttons[i]}")
-        min_num_press = 999
+    for i, joltage in enumerate(joltages):
+        print(joltage)
+        c = [1 for button in buttons[i]]
+        
+        A = [[0 for xd in buttons[i]] for _ in joltage]
+        # button is [0,1,2,..]
+        
+        for col, button in enumerate(buttons[i]):
+            for row in button:
+                row = int(row)
+                A[row][col] = 1
+       
+        constraints = LinearConstraint(A, joltage, joltage)
 
-        minimum = min_button_press(joltages[i], buttons[i])
+        res = milp(c, integrality=1,constraints=constraints)
+        total_pt2 += int(sum(res.x))
 
-        total_pt2 += min_num_press 
-        print("========")
-
-    print("total part 2:", total_pt2)
-
+    print(total_pt2)
 
 
 
